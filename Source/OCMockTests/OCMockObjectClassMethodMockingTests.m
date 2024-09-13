@@ -220,7 +220,7 @@ static NSUInteger initializeCallCount = 0;
 
 - (void)testRevertsAllStubbedMethodsOnDealloc
 {
-    id mock = [[OCClassMockObject alloc] initWithClass:[TestClassWithClassMethods class]];
+    id mock = [[OCClassMockObject alloc] initForMockingClass:[TestClassWithClassMethods class]];
 
     [[[[mock stub] classMethod] andReturn:@"mocked-foo"] foo];
     [[[[mock stub] classMethod] andReturn:@"mocked-bar"] bar];
@@ -236,7 +236,7 @@ static NSUInteger initializeCallCount = 0;
 
 - (void)testRevertsAllStubbedMethodsOnPartialMockDealloc
 {
-    id mock = [[OCPartialMockObject alloc] initWithClass:[TestClassWithClassMethods class]];
+    id mock = [[OCPartialMockObject alloc] initForMockingClass:[TestClassWithClassMethods class]];
 
     [[[[mock stub] classMethod] andReturn:@"mocked-foo"] foo];
     [[[[mock stub] classMethod] andReturn:@"mocked-bar"] bar];
@@ -252,10 +252,10 @@ static NSUInteger initializeCallCount = 0;
 
 - (void)testSecondClassMockDeactivatesFirst
 {
-    id mock1 = [[OCClassMockObject alloc] initWithClass:[TestClassWithClassMethods class]];
+    id mock1 = [[OCClassMockObject alloc] initForMockingClass:[TestClassWithClassMethods class]];
     [[[mock1 stub] andReturn:@"mocked-foo-1"] foo];
 
-    id mock2 = [[OCClassMockObject alloc] initWithClass:[TestClassWithClassMethods class]];
+    id mock2 = [[OCClassMockObject alloc] initForMockingClass:[TestClassWithClassMethods class]];
     XCTAssertEqualObjects(@"Foo-ClassMethod", [TestClassWithClassMethods foo]);
 
     [mock2 stopMocking];
@@ -264,7 +264,7 @@ static NSUInteger initializeCallCount = 0;
 
 - (void)testStopMockingDisposesMetaClass
 {
-    id mock = [[OCClassMockObject alloc] initWithClass:[TestClassWithClassMethods class]];
+    id mock = [[OCClassMockObject alloc] initForMockingClass:[TestClassWithClassMethods class]];
 
     char *createdSubclassName = strdup(object_getClassName([TestClassWithClassMethods class]));
     XCTAssertNotNil(objc_lookUpClass(createdSubclassName));
@@ -276,11 +276,11 @@ static NSUInteger initializeCallCount = 0;
 
 - (void)testSecondClassMockDisposesFirstMetaClass
 {
-    id mock1 = [[OCClassMockObject alloc] initWithClass:[TestClassWithClassMethods class]];
+    id mock1 = [[OCClassMockObject alloc] initForMockingClass:[TestClassWithClassMethods class]];
     char *createdSubclassName1 = strdup(object_getClassName([TestClassWithClassMethods class]));
     XCTAssertNotNil(objc_lookUpClass(createdSubclassName1));
 
-    id mock2 = [[OCClassMockObject alloc] initWithClass:[TestClassWithClassMethods class]];
+    id mock2 = [[OCClassMockObject alloc] initForMockingClass:[TestClassWithClassMethods class]];
     char *createdSubclassName2 = strdup(object_getClassName([TestClassWithClassMethods class]));
     XCTAssertNotNil(objc_lookUpClass(createdSubclassName2));
 

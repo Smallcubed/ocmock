@@ -34,7 +34,7 @@
     if([anObject isProxy])
         [NSException raise:NSInvalidArgumentException format:@"OCMock does not support partially mocking subclasses of NSProxy."];
     Class const class = [self classToSubclassForObject:anObject];
-    [super initWithClass:class];
+    [super initForMockingInstancesOfClass:class];
     realObject = [anObject retain];
     [self prepareObjectForInstanceMethodMocking];
     return self;

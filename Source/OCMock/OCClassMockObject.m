@@ -29,13 +29,20 @@
 @implementation OCClassMockObject
 
 #pragma mark Initialisers, description, accessors, etc.
-
-- (id)initWithClass:(Class)aClass
+- (id)initForMockingClass:(Class)aClass
 {
     [self assertClassIsSupported:aClass];
     [super init];
     mockedClass = aClass;
-    [self prepareClassForClassMethodMocking];
+    [self prepareClassForMockingInstances:NO classes:YES];
+    return self;
+}
+- (id)initForMockingInstancesOfClass:(Class)aClass
+{
+    [self assertClassIsSupported:aClass];
+    [super init];
+    mockedClass = aClass;
+    [self prepareClassForMockingInstances:YES classes:NO];
     return self;
 }
 
@@ -104,7 +111,7 @@
 
 #pragma mark Class method mocking
 
-- (void)prepareClassForClassMethodMocking
+- (void)prepareClassForMockingInstances:(BOOL)forInstances classes:(BOOL)forClasses
 {
     /* the runtime and OCMock depend on string and array; we don't intercept methods on them to avoid endless loops */
     if([[mockedClass class] isSubclassOfClass:[NSString class]] || [[mockedClass class] isSubclassOfClass:[NSArray class]])
@@ -116,51 +123,54 @@
 
     /* if there is another mock for this exact class, stop it */
     id otherMock = OCMGetAssociatedMockForClass(mockedClass, NO);
-    if(otherMock != nil)
-        [otherMock stopMockingClassMethods];
-
-    OCMSetAssociatedMockForClass(self, mockedClass);
-
-    /* dynamically create a subclass and use its meta class as the meta class for the mocked class */
-    classCreatedForNewMetaClass = OCMCreateSubclass(mockedClass, mockedClass);
-    originalMetaClass = object_getClass(mockedClass);
-    id newMetaClass = object_getClass(classCreatedForNewMetaClass);
-
-    /* create a dummy initialize method */
-    Method myDummyInitializeMethod = class_getInstanceMethod([self mockObjectClass], @selector(initializeForClassObject));
-    const char *initializeTypes = method_getTypeEncoding(myDummyInitializeMethod);
-    IMP myDummyInitializeIMP = method_getImplementation(myDummyInitializeMethod);
-    class_addMethod(newMetaClass, @selector(initialize), myDummyInitializeIMP, initializeTypes);
-
-    object_setClass(mockedClass, newMetaClass); // only after dummy initialize is installed (iOS9)
-
-    /* point forwardInvocation: of the object to the implementation in the mock */
-    Method myForwardMethod = class_getInstanceMethod([self mockObjectClass], @selector(forwardInvocationForClassObject:));
-    IMP myForwardIMP = method_getImplementation(myForwardMethod);
-    class_addMethod(newMetaClass, @selector(forwardInvocation:), myForwardIMP, method_getTypeEncoding(myForwardMethod));
-
-    /* adding forwarder for most class methods (instance methods on meta class) to allow for verify after run */
-    NSArray *methodsNotToForward = @[
-        @"class", @"forwardingTargetForSelector:", @"methodSignatureForSelector:", @"forwardInvocation:", @"isBlock",
-        @"instanceMethodForwarderForSelector:", @"instanceMethodSignatureForSelector:", @"resolveClassMethod:"
-    ];
-    void (^setupForwarderFiltered)(Class, SEL) = ^(Class cls, SEL sel) {
-        if((cls == object_getClass([NSObject class])) || (cls == [NSObject class]) || (cls == object_getClass(cls)))
-            return;
-        if(OCMIsApplePrivateMethod(cls, sel))
-            return;
-        if([methodsNotToForward containsObject:NSStringFromSelector(sel)])
-            return;
-        @try
-        {
-            [self setupForwarderForClassMethodSelector:sel];
-        }
-        @catch(NSException *e)
-        {
-            // ignore for now
-        }
-    };
-    [NSObject enumerateMethodsInClass:originalMetaClass usingBlock:setupForwarderFiltered];
+    if( otherMock != nil && forClasses)
+    {
+        [NSException raise:NSInvalidArgumentException format:@"Class Mock must be made before partial mocks"];
+    }
+    if(otherMock == nil){
+        OCMSetAssociatedMockForClass(self, mockedClass);
+        
+        /* dynamically create a subclass and use its meta class as the meta class for the mocked class */
+        classCreatedForNewMetaClass = OCMCreateSubclass(mockedClass, mockedClass);
+        originalMetaClass = object_getClass(mockedClass);
+        id newMetaClass = object_getClass(classCreatedForNewMetaClass);
+        
+        /* create a dummy initialize method */
+        Method myDummyInitializeMethod = class_getInstanceMethod([self mockObjectClass], @selector(initializeForClassObject));
+        const char *initializeTypes = method_getTypeEncoding(myDummyInitializeMethod);
+        IMP myDummyInitializeIMP = method_getImplementation(myDummyInitializeMethod);
+        class_addMethod(newMetaClass, @selector(initialize), myDummyInitializeIMP, initializeTypes);
+        
+        object_setClass(mockedClass, newMetaClass); // only after dummy initialize is installed (iOS9)
+        
+        /* point forwardInvocation: of the object to the implementation in the mock */
+        Method myForwardMethod = class_getInstanceMethod([self mockObjectClass], @selector(forwardInvocationForClassObject:));
+        IMP myForwardIMP = method_getImplementation(myForwardMethod);
+        class_addMethod(newMetaClass, @selector(forwardInvocation:), myForwardIMP, method_getTypeEncoding(myForwardMethod));
+        
+        /* adding forwarder for most class methods (instance methods on meta class) to allow for verify after run */
+        NSArray *methodsNotToForward = @[
+            @"class", @"forwardingTargetForSelector:", @"methodSignatureForSelector:", @"forwardInvocation:", @"isBlock",
+            @"instanceMethodForwarderForSelector:", @"instanceMethodSignatureForSelector:", @"resolveClassMethod:"
+        ];
+        void (^setupForwarderFiltered)(Class, SEL) = ^(Class cls, SEL sel) {
+            if((cls == object_getClass([NSObject class])) || (cls == [NSObject class]) || (cls == object_getClass(cls)))
+                return;
+            if(OCMIsApplePrivateMethod(cls, sel))
+                return;
+            if([methodsNotToForward containsObject:NSStringFromSelector(sel)])
+                return;
+            @try
+            {
+                [self setupForwarderForClassMethodSelector:sel];
+            }
+            @catch(NSException *e)
+            {
+                // ignore for now
+            }
+        };
+        [NSObject enumerateMethodsInClass:originalMetaClass usingBlock:setupForwarderFiltered];
+    }
 }
 
 

@@ -45,7 +45,7 @@
 
 + (id)mockForClass:(Class)aClass
 {
-    return [[[OCClassMockObject alloc] initWithClass:aClass] autorelease];
+    return [[[OCClassMockObject alloc] initForMockingClass:aClass] autorelease];
 }
 
 + (id)mockForProtocol:(Protocol *)aProtocol

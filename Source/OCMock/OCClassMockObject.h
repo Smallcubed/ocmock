@@ -22,8 +22,8 @@
     Class originalMetaClass;
     Class classCreatedForNewMetaClass;
 }
-
-- (id)initWithClass:(Class)aClass;
+- (id)initForMockingClass:(Class)aClass;
+- (id)initForMockingInstancesOfClass:(Class)aClass;
 
 - (Class)mockedClass;
 - (Class)mockObjectClass; // since -class returns the mockedClass
