@@ -210,6 +210,19 @@ NSDictionary <NSString*,NSSet <Class> *>  * _static_ignoredBySelectorName;
     expectationOrderMatters = flag;
 }
 
+- (void)removeStubsForSelector:(SEL)selector{
+    @synchronized (stubs) {
+        int s = stubs.count;
+        while (--s){
+            OCMInvocationStub * stub = stubs[s];
+            if ([stub isKindOfClass:OCMInvocationStub.class]){
+                if (stub.recordedInvocation.selector == selector){
+                    [stubs removeObjectAtIndex:s];
+                }
+            }
+        }
+    }
+}
 - (void)stopMocking
 {
     // invocations can contain objects that clients expect to be deallocated by now,

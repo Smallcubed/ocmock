@@ -65,6 +65,7 @@
 // internal use only
 
 - (void)addStub:(OCMInvocationStub *)aStub;
+- (void)removeStubsForSelector:(SEL)selector;
 - (void)addExpectation:(OCMInvocationExpectation *)anExpectation;
 - (void)addInvocation:(NSInvocation *)anInvocation;
 
