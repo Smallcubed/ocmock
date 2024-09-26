@@ -213,7 +213,7 @@ NSDictionary <NSString*,NSSet <Class> *>  * _static_ignoredBySelectorName;
 - (void)removeStubsForSelector:(SEL)selector{
     @synchronized (stubs) {
         int s = stubs.count;
-        while (--s){
+        while (s--){
             OCMInvocationStub * stub = stubs[s];
             if ([stub isKindOfClass:OCMInvocationStub.class]){
                 if (stub.recordedInvocation.selector == selector){
