@@ -55,9 +55,23 @@ static NSHashTable *_OCMPassByRefSetterInstances = NULL;
     return self;
 }
 
+- (id)initWithBlock:(id(^)(void))aBlock{
+    if((self = [super init]))
+    {
+        block = [aBlock copy];
+        @synchronized(_OCMPassByRefSetterInstances)
+        {
+            NSHashInsertKnownAbsent(_OCMPassByRefSetterInstances, self);
+        }
+    }
+
+    return self;
+}
+
 - (void)dealloc
 {
     [value release];
+    [block release];
     @synchronized(_OCMPassByRefSetterInstances)
     {
         NSHashRemove(_OCMPassByRefSetterInstances, self);
@@ -70,10 +84,15 @@ static NSHashTable *_OCMPassByRefSetterInstances = NULL;
     void *pointerValue = [arg pointerValue];
     if(pointerValue != NULL)
     {
-        if([value isKindOfClass:[NSValue class]])
-            [(NSValue *)value getValue:pointerValue];
-        else
-            *(id *)pointerValue = value;
+        if (block){
+           *(id*)pointerValue = block();
+        }
+        else{
+            if([value isKindOfClass:[NSValue class]])
+                [(NSValue *)value getValue:pointerValue];
+            else
+                *(id *)pointerValue = value;
+        }
     }
 }
 

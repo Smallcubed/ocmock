@@ -36,6 +36,7 @@
 
 + (id *)setTo:(id)value;
 + (void *)setToValue:(NSValue *)value;
++ (id *)setToResultOfBlock:(id(^)(void))block;
 + (id)invokeBlock;
 + (id)invokeBlockWithArgs:(id)first, ... NS_REQUIRES_NIL_TERMINATION;
 

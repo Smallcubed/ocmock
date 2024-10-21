@@ -19,9 +19,11 @@
 @interface OCMPassByRefSetter : OCMArgAction
 {
     id value;
+    id(^block)(void);
 }
 
 - (id)initWithValue:(id)value;
+- (id)initWithBlock:(id(^)(void))block;
 
 + (BOOL)isPassByRefSetterInstance:(void *)ptr;
 

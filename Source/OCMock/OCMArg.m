@@ -87,6 +87,10 @@
     return (id *)[[[OCMPassByRefSetter alloc] initWithValue:value] autorelease];
 }
 
++ (id *)setToResultOfBlock:(id(^)(void))block{
+    return (id *)[[[OCMPassByRefSetter alloc] initWithBlock:block] autorelease];
+}
+
 + (void *)setToValue:(NSValue *)value
 {
     return (id *)[[[OCMPassByRefSetter alloc] initWithValue:value] autorelease];
